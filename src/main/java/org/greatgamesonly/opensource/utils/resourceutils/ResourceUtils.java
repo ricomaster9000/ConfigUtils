@@ -66,19 +66,19 @@ public final class ResourceUtils {
         return properties;
     }
 
-    public String readFileIntoString(File file) throws IOException {
+    public static String readFileIntoString(File file) throws IOException {
         return readString(file.toPath());
     }
 
-    public String readFileIntoString(Path path) throws IOException {
+    public static String readFileIntoString(Path path) throws IOException {
         return readString(path);
     }
 
-    public String readFileIntoString(URL resource) throws IOException, URISyntaxException {
+    public static String readFileIntoString(URL resource) throws IOException, URISyntaxException {
         return readString(new File(resource.toURI()).toPath());
     }
 
-    public String readFileIntoString(String path) throws IOException {
+    public static String readFileIntoString(String path) throws IOException {
         return readString(Paths.get(path));
     }
 
@@ -93,11 +93,11 @@ public final class ResourceUtils {
     }
 
     //"*.{java,class,jar}"
-    public List<File> getAllFilesByRegexPattern(String dirPath, String regexPattern) {
+    public static List<File> getAllFilesByRegexPattern(String dirPath, String regexPattern) {
         return getAllFilesByRegexPattern(Paths.get(dirPath), regexPattern);
     }
 
-    public List<File> getAllFilesByRegexPattern(Path dirPath, String regexPattern) {
+    public static List<File> getAllFilesByRegexPattern(Path dirPath, String regexPattern) {
         List<File> files = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath, regexPattern)) {
             for (Path entry : stream) {
