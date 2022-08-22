@@ -6,7 +6,7 @@
 	<groupId>org.greatgamesonly.opensource.utils</groupId>
 	<artifactId>resourceutils</artifactId>
 	<url>https://github.com/ricomaster9000/Java-Reflection-Utils</url>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<properties>
 		<compiler-plugin.version>3.8.1</compiler-plugin.version>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
@@ -15,4 +15,11 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.eclipse.microprofile.config</groupId>
+			<artifactId>microprofile-config-api</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+	</dependencies>
 </project>
