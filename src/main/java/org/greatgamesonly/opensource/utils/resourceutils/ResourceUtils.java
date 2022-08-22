@@ -19,12 +19,9 @@ public final class ResourceUtils {
     private static Properties properties;
 
     public static String getProperty(String keyName) {
-        String result = ConfigProvider.getConfig().getValue(keyName, String.class);
+        String result = System.getenv(keyName);
         if(result == null || result.isBlank()) {
             result = getProperties().getProperty(keyName);
-        }
-        if(result == null || result.isBlank()) {
-            result = System.getenv(keyName);
         }
         return result;
     }
