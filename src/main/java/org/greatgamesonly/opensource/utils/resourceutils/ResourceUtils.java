@@ -1,6 +1,5 @@
 package org.greatgamesonly.opensource.utils.resourceutils;
 
-import org.eclipse.microprofile.config.ConfigProvider;
 
 import java.io.*;
 import java.net.URISyntaxException;
