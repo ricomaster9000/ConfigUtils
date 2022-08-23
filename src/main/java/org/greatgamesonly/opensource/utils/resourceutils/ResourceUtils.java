@@ -1,8 +1,6 @@
 package org.greatgamesonly.opensource.utils.resourceutils;
 
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -10,10 +8,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
