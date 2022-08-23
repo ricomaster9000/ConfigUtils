@@ -1,6 +1,8 @@
 package org.greatgamesonly.opensource.utils.resourceutils;
 
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -8,9 +10,12 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static java.nio.file.Files.readString;
 
@@ -110,31 +115,31 @@ public final class ResourceUtils {
         }
     }
 
-    public static List<String> getAllFileNamesInPath(String path, boolean alsoCheckSubDirectories) throws IOException {
+    private List<String> getAllFilePathsInPath(String path, boolean checkSubDirectories) throws IOException {
+        return getAllFileNamesInPath(path,checkSubDirectories).stream().map(fileName -> path + "/" + fileName).collect(Collectors.toList());
+    }
+
+    private List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException {
         List<String> filenames = new ArrayList<>();
+
         try (
-            InputStream in = getResourceAsStream(path);
-            BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+                InputStream in = getResourceAsStream(path);
+                BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
             String resource;
+
             while ((resource = br.readLine()) != null) {
-                if(resource.endsWith("/")) {
-                    if(alsoCheckSubDirectories) {
-                        filenames.addAll(getAllFileNamesInPath(resource,alsoCheckSubDirectories));
-                    }
-                } else {
-                    filenames.add((path.endsWith("/")) ? path + resource : path + "/" + resource);
-                }
+                filenames.add(resource);
             }
         }
+
         return filenames;
     }
 
-    public static InputStream getResourceAsStream(String resource) {
-        try (InputStream in = getContextClassLoader().getResourceAsStream(resource)) {
-            return in == null ? getContextClassLoader().getResourceAsStream(resource) : in;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private InputStream getResourceAsStream(String resource) {
+        final InputStream in
+                = getContextClassLoader().getResourceAsStream(resource);
+
+        return in == null ? getClass().getResourceAsStream(resource) : in;
     }
 
     private static ClassLoader getContextClassLoader() {
