@@ -111,11 +111,11 @@ public final class ResourceUtils {
         }
     }
 
-    private List<String> getAllFilePathsInPath(String path, boolean checkSubDirectories) throws IOException {
+    public static List<String> getAllFilePathsInPath(String path, boolean checkSubDirectories) throws IOException {
         return getAllFileNamesInPath(path,checkSubDirectories).stream().map(fileName -> path + "/" + fileName).collect(Collectors.toList());
     }
 
-    private List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException {
+    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException {
         List<String> filenames = new ArrayList<>();
 
         try (
@@ -131,11 +131,11 @@ public final class ResourceUtils {
         return filenames;
     }
 
-    private InputStream getResourceAsStream(String resource) {
+    public static InputStream getResourceAsStream(String resource) {
         final InputStream in
                 = getContextClassLoader().getResourceAsStream(resource);
 
-        return in == null ? getClass().getResourceAsStream(resource) : in;
+        return in == null ? getContextClassLoader().getResourceAsStream(resource) : in;
     }
 
     private static ClassLoader getContextClassLoader() {
