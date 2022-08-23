@@ -79,8 +79,8 @@ public final class ResourceUtils {
         return readString(new File(resource.toURI()).toPath());
     }
 
-    public static String readFileIntoString(String path) throws IOException {
-        return readString(Paths.get(path));
+    public static String readFileIntoString(String path) throws IOException, URISyntaxException {
+        return readString(getFileFromPath(path).toPath());
     }
 
     public static File getFileFromPath(String path) throws URISyntaxException {
