@@ -1,7 +1,7 @@
 # ResourceUtils
 Just a small library that wraps some logic for accessing files and data in the usual resources directory of current jar
 
-add as dependency by using jitpack.io, go to this link: https://jitpack.io/#ricomaster9000/ResourceUtils/1.0.2.2
+add as dependency by using jitpack.io, go to this link: https://jitpack.io/#ricomaster9000/ResourceUtils/1.1.0
 
 ### methods available:
 
@@ -9,27 +9,29 @@ add as dependency by using jitpack.io, go to this link: https://jitpack.io/#rico
 
     public static String getResourceProperty(String keyName)
 
-    public static Properties loadPropertiesFile() // loads the properties file as it is saved in the resource dir
+    public static Properties loadPropertiesFile()
 
-    public static Properties getProperties() // gets the file from the stored private static variable inside the class, it only gets the resource file date       using loadPropertiesFile once
+    public static Properties getProperties()
 
-    public static String readFileIntoString(File file)
+    public static String readFileIntoString(String path) throws IOException, URISyntaxException
 
-    public static String readFileIntoString(Path path)
-
-    public static String readFileIntoString(URL resource)
-
-    public static String readFileIntoString(String path)
+    public static JarFile getCurrentRunningJarFile()
 
     public static File getFileFromPath(String path) throws URISyntaxException
 
-    public static List<File> getAllFilesByRegexPattern(String dirPath, String regexPattern)
+    public static List<File> getAllFilesInPath(String resourcePath, String filterByFileNameExtension) throws IOException, URISyntaxException
 
-    public static List<File> getAllFilesByRegexPattern(Path dirPath, String regexPattern)
+    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException
 
-    public static List<String> getAllFileNamesInPath(String path, boolean alsoCheckSubDirectories) throws IOException
+    public File findFileInRunningJar(URL fullPath)
 
-    public static InputStream getResourceAsStream(String resource)
+    public File findFileInRunningJar(Path fullPath)
 
-    public static Boolean doesDirectoryOrFileExistInDirectory(String directory)
+    public static Boolean doesDirectoryOrFileExist(String path)
+
+    public static File findFileInRunningJar(String fullPath)
+
+    public static long copyLarge(InputStream inputStream, OutputStream outputStream)
+
+    public static long copyLarge(InputStream inputStream, OutputStream outputStream, int buffer) throws IOException
 

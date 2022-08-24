@@ -8,15 +8,16 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 
 import static java.nio.file.Files.readString;
 
 public final class ResourceUtils {
     private static Properties properties;
+    private static final HashMap<String, RunningJarTempFile> jarFileEntryTempMemStorage = new HashMap<>();
 
     public static String getProperty(String keyName) {
         String result = System.getenv(keyName);
@@ -68,38 +69,44 @@ public final class ResourceUtils {
         return properties;
     }
 
-    public static String readFileIntoString(File file) throws IOException {
-        return readString(file.toPath());
-    }
-
-    public static String readFileIntoString(Path path) throws IOException {
-        return readString(path);
-    }
-
-    public static String readFileIntoString(URL resource) throws IOException, URISyntaxException {
-        return readString(new File(resource.toURI()).toPath());
-    }
-
+    // handles the part to verify file actually exists
     public static String readFileIntoString(String path) throws IOException, URISyntaxException {
         return readString(getFileFromPath(path).toPath());
     }
 
-    public static File getFileFromPath(String path) throws URISyntaxException {
-        ClassLoader classLoader = getContextClassLoader();
-        URL resource = classLoader.getResource(path);
-        if (resource == null) {
-            throw new IllegalArgumentException("file not found! " + path);
-        } else {
-            return new File(resource.toURI());
+    public static JarFile getCurrentRunningJarFile() {
+        JarFile jarFile = null;
+        try {
+            jarFile = new JarFile(System.getProperty("java.class.path"));
+        } catch(Exception ignored) {}
+
+        if(jarFile == null && getContextClassLoader().getClass().getProtectionDomain() != null && getContextClassLoader().getClass().getProtectionDomain().getCodeSource() != null)
+        {
+            try {
+                jarFile = new JarFile(getContextClassLoader().getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+            } catch (Exception ignored) {}
         }
+        if(jarFile == null) {
+            try {
+                jarFile = new JarFile("application.jar");
+            } catch (Exception ignored) {}
+        }
+        if(jarFile == null) {
+            try {
+                jarFile = new JarFile("app.jar");
+            } catch (Exception ignored) {}
+        }
+        return jarFile;
     }
 
     //"*.{java,class,jar}"
-    public static List<File> getAllFilesByRegexPattern(String dirPath, String regexPattern) {
+    // TODO - finish
+    private static List<File> getAllFilesByRegexPattern(String dirPath, String regexPattern) {
         return getAllFilesByRegexPattern(Paths.get(dirPath), regexPattern);
     }
 
-    public static List<File> getAllFilesByRegexPattern(Path dirPath, String regexPattern) {
+    // TODO - finish
+    private static List<File> getAllFilesByRegexPattern(Path dirPath, String regexPattern) {
         List<File> files = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath, regexPattern)) {
             for (Path entry : stream) {
@@ -111,39 +118,158 @@ public final class ResourceUtils {
         }
     }
 
-    public static List<String> getAllFilePathsInPath(String path, boolean checkSubDirectories) throws IOException {
-        return getAllFileNamesInPath(path,checkSubDirectories).stream().map(fileName -> path + "/" + fileName).collect(Collectors.toList());
+    public static File getFileFromPath(String path) throws URISyntaxException {
+        File file = findFileInRunningJar(path);
+        if(file == null) {
+            URL resource = getContextClassLoader().getResource(path);
+            if (resource == null) {
+                throw new IllegalArgumentException("file not found! " + path);
+            } else {
+                return new File(resource.toURI());
+            }
+        }
+        return file;
+    }
+
+    public static List<File> getAllFilesInPath(String resourcePath, String filterByFileNameExtension) throws IOException, URISyntaxException {
+        List<File> files = new ArrayList<>();
+
+        getAllFileEntriesInRunningJar().values().stream()
+                .filter(runningJarTempFile -> runningJarTempFile.getOriginalPath().equals(resourcePath))
+                .forEach((runningJarTempFile) -> files.add(runningJarTempFile.getTempFile()));
+
+        if(files.isEmpty()) {
+            try (InputStream in = getContextClassLoader().getResourceAsStream(resourcePath); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+                String resource;
+                while ((resource = br.readLine()) != null) {
+                    if (resource.endsWith(filterByFileNameExtension)) {
+                        URL resourceFile = getContextClassLoader().getResource(resourcePath.endsWith("/") ? resourcePath + resource : resourcePath + "/" + resource);
+                        if (resourceFile != null) {
+                            files.add(new File(resourceFile.toURI()));
+                        }
+                    }
+                }
+            }
+        }
+        return files;
     }
 
     public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException {
         List<String> filenames = new ArrayList<>();
 
-        try (
-                InputStream in = getResourceAsStream(path);
-                BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
-            String resource;
+        getAllFileEntriesInRunningJar().values().stream()
+                .filter(runningJarTempFile -> (checkSubDirectories) ? runningJarTempFile.getOriginalPath().contains(path) : runningJarTempFile.getOriginalPath().equals(path))
+                .forEach((runningJarTempFile) -> filenames.add(runningJarTempFile.getOriginalName()));
 
-            while ((resource = br.readLine()) != null) {
-                filenames.add(resource);
-            }
+        if(filenames.isEmpty()) {
+            try (InputStream in = getContextClassLoader().getResource(path).openStream(); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+                String resource;
+                while ((resource = br.readLine()) != null) {
+                    filenames.add(resource);
+                }
+            } catch (Exception ignored) {}
         }
-
         return filenames;
     }
 
-    public static InputStream getResourceAsStream(String resource) {
-        final InputStream in
-                = getContextClassLoader().getResourceAsStream(resource);
+    public File findFileInRunningJar(URL fullPath) {
+        return findFileInRunningJar(fullPath.getPath());
+    }
 
-        return in == null ? getContextClassLoader().getResourceAsStream(resource) : in;
+    public File findFileInRunningJar(Path fullPath) {
+        return findFileInRunningJar(fullPath.toString());
+    }
+
+    public static Boolean doesDirectoryOrFileExist(String path) {
+        boolean doesExist = getCurrentRunningJarFile().getEntry(path) != null;
+        if(!doesExist) {
+            final URL resource = getContextClassLoader().getResource(path);
+            doesExist = (resource != null && resource.getPath() != null);
+        }
+        return doesExist;
+    }
+
+    public static File findFileInRunningJar(String fullPath) {
+        RunningJarTempFile file = getAllFileEntriesInRunningJar().containsKey(fullPath) ?
+                getAllFileEntriesInRunningJar().get(fullPath) :
+                getAllFileEntriesInRunningJar().values().stream()
+                        .filter(runningJarTempFile -> runningJarTempFile.getOriginalPath().contains(fullPath))
+                        .findFirst().orElse(null);
+        return file != null ? file.getTempFile() : null;
+    }
+
+    public static long copyLarge(InputStream inputStream, OutputStream outputStream) throws IOException {
+        return copyLarge(inputStream, outputStream, 8192);
+    }
+
+    public static long copyLarge(InputStream inputStream, OutputStream outputStream, int buffer) throws IOException {
+        Objects.requireNonNull(inputStream, "inputStream");
+        Objects.requireNonNull(outputStream, "outputStream");
+        byte[] bufferBytes = new byte[buffer];
+        long count;
+        int n;
+        for(count = 0L; -1 != (n = inputStream.read(bufferBytes)); count += n) {
+            outputStream.write(bufferBytes, 0, n);
+        }
+        return count;
+    }
+
+    private static HashMap<String, RunningJarTempFile> getAllFileEntriesInRunningJar() {
+        JarFile jar = getCurrentRunningJarFile();
+        List<ZipEntry> entries = jar.stream()
+                .filter(jarEntry -> !jarEntry.isDirectory())
+                .collect(Collectors.toList());
+        for(ZipEntry fileEntry : entries) {
+            try {
+                if(!jarFileEntryTempMemStorage.containsKey(fileEntry.getName()) ||
+                        jarFileEntryTempMemStorage.get(fileEntry.getName()).tempFile.lastModified() != fileEntry.getLastModifiedTime().toMillis()
+                ) {
+                    InputStream input = jar.getInputStream(fileEntry);
+                    File tempFile = File.createTempFile(fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf('.')), fileEntry.getName().substring(fileEntry.getName().lastIndexOf('.')));
+                    tempFile.deleteOnExit();
+                    FileOutputStream out = new FileOutputStream(tempFile);
+                    copyLarge(input, out);
+
+                    String realName = null;
+                    String pathName = "";
+                    if (fileEntry.getName().contains("/")) {
+                        realName = fileEntry.getName().substring(fileEntry.getName().lastIndexOf("/"));
+                        pathName = fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf("/"));
+                    } else {
+                        realName = fileEntry.getName();
+                    }
+                    jarFileEntryTempMemStorage.put(fileEntry.getName(),new RunningJarTempFile(pathName, realName, tempFile));
+                }
+            } catch (java.io.IOException ignored) {}
+        }
+        return jarFileEntryTempMemStorage;
     }
 
     private static ClassLoader getContextClassLoader() {
         return Thread.currentThread().getContextClassLoader();
     }
 
-    public static Boolean doesDirectoryOrFileExistInDirectory(String directory) {
-        final  URL resource = getContextClassLoader().getResource(directory);
-        return (resource != null);
+    private static class RunningJarTempFile {
+        private final String originalPath;
+        private final String originalName;
+        private final File tempFile;
+
+        public RunningJarTempFile(String originalPath, String originalName, File tempFile) {
+            this.originalPath = originalPath;
+            this.originalName = originalName;
+            this.tempFile = tempFile;
+        }
+
+        public String getOriginalPath() {
+            return originalPath;
+        }
+
+        public String getOriginalName() {
+            return originalName;
+        }
+
+        public File getTempFile() {
+            return tempFile;
+        }
     }
 }
