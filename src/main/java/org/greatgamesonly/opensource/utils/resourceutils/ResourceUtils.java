@@ -225,7 +225,13 @@ public final class ResourceUtils {
                         jarFileEntryTempMemStorage.get(fileEntry.getName()).tempFile.lastModified() != fileEntry.getLastModifiedTime().toMillis()
                 ) {
                     InputStream input = jar.getInputStream(fileEntry);
-                    File tempFile = File.createTempFile(fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf('.')), fileEntry.getName().substring(fileEntry.getName().lastIndexOf('.')));
+                    File tempFile;
+                    int dotIndexFileExt = fileEntry.getName().lastIndexOf('.');
+                    if(dotIndexFileExt > 0) {
+                        tempFile = File.createTempFile(fileEntry.getName().substring(0, dotIndexFileExt), fileEntry.getName().substring(dotIndexFileExt));
+                    } else {
+                        tempFile = File.createTempFile(fileEntry.getName(), null);
+                    }
                     tempFile.deleteOnExit();
                     FileOutputStream out = new FileOutputStream(tempFile);
                     copyLarge(input, out);
