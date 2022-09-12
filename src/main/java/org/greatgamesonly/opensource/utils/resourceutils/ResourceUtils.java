@@ -136,7 +136,7 @@ public final class ResourceUtils {
 
         getAllFileEntriesInRunningJar().values().stream()
                 .filter(runningJarTempFile -> runningJarTempFile.getOriginalPath().equals(resourcePath))
-                .forEach((runningJarTempFile) -> files.add(runningJarTempFile.getTempFile()));
+                .forEach((runningJarTempFile) -> files.add(getResourceFile(runningJarTempFile.getFileEntry())));
 
         if(files.isEmpty()) {
             try (InputStream in = getContextClassLoader().getResourceAsStream(resourcePath); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
@@ -154,18 +154,29 @@ public final class ResourceUtils {
         return files;
     }
 
-    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException {
+    public static File getResourceFile(ZipEntry fileEntry) {
+        File tempFile = null;
+        try {
+            InputStream input = getCurrentRunningJarFile().getInputStream(fileEntry);
+            int dotIndexFileExt = fileEntry.getName().lastIndexOf('.');
+            if (dotIndexFileExt > 0) {
+                tempFile = File.createTempFile(fileEntry.getName().substring(0, dotIndexFileExt), fileEntry.getName().substring(dotIndexFileExt));
+            } else {
+                tempFile = File.createTempFile(fileEntry.getName(), null);
+            }
+            tempFile.deleteOnExit();
+            FileOutputStream out = new FileOutputStream(tempFile);
+            copyLarge(input, out);
+        } catch (IOException ignored) {}
+        return tempFile;
+    }
+
+    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) {
         List<String> filenames = new ArrayList<>();
 
         getAllFileEntriesInRunningJar().values().stream()
                 .filter(runningJarTempFile -> (checkSubDirectories) ? runningJarTempFile.getOriginalPath().contains(path) : runningJarTempFile.getOriginalPath().equals(path))
-                .forEach((runningJarTempFile) -> {
-                    if(runningJarTempFile.getOriginalName().startsWith("/")) {
-                        filenames.add(runningJarTempFile.getOriginalName().substring(1));
-                    } else {
-                        filenames.add(runningJarTempFile.getOriginalName());
-                    }
-                });
+                .forEach((runningJarTempFile) -> filenames.add(runningJarTempFile.getOriginalName()));
 
         if(filenames.isEmpty()) {
             try (InputStream in = getContextClassLoader().getResource(path).openStream(); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
@@ -201,7 +212,7 @@ public final class ResourceUtils {
                 getAllFileEntriesInRunningJar().values().stream()
                         .filter(runningJarTempFile -> runningJarTempFile.getOriginalPath().contains(fullPath))
                         .findFirst().orElse(null);
-        return file != null ? file.getTempFile() : null;
+        return file != null ? getResourceFile(file.getFileEntry()) : null;
     }
 
     public static long copyLarge(InputStream inputStream, OutputStream outputStream) throws IOException {
@@ -226,33 +237,20 @@ public final class ResourceUtils {
                 .filter(jarEntry -> !jarEntry.isDirectory())
                 .collect(Collectors.toList());
         for(ZipEntry fileEntry : entries) {
-            try {
-                if(!jarFileEntryTempMemStorage.containsKey(fileEntry.getName()) ||
-                        jarFileEntryTempMemStorage.get(fileEntry.getName()).tempFile.lastModified() != fileEntry.getLastModifiedTime().toMillis()
-                ) {
-                    InputStream input = jar.getInputStream(fileEntry);
-                    File tempFile;
-                    int dotIndexFileExt = fileEntry.getName().lastIndexOf('.');
-                    if(dotIndexFileExt > 0) {
-                        tempFile = File.createTempFile(fileEntry.getName().substring(0, dotIndexFileExt), fileEntry.getName().substring(dotIndexFileExt));
-                    } else {
-                        tempFile = File.createTempFile(fileEntry.getName(), null);
-                    }
-                    tempFile.deleteOnExit();
-                    FileOutputStream out = new FileOutputStream(tempFile);
-                    copyLarge(input, out);
-
-                    String realName = null;
-                    String pathName = "";
-                    if (fileEntry.getName().contains("/")) {
-                        realName = fileEntry.getName().substring(fileEntry.getName().lastIndexOf("/"));
-                        pathName = fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf("/"));
-                    } else {
-                        realName = fileEntry.getName();
-                    }
-                    jarFileEntryTempMemStorage.put(fileEntry.getName(),new RunningJarTempFile(pathName, realName, tempFile));
+            if(!jarFileEntryTempMemStorage.containsKey(fileEntry.getName())) {
+                String realName = null;
+                String pathName = "";
+                if (fileEntry.getName().substring(1).contains("/")) {
+                    realName = fileEntry.getName().substring(fileEntry.getName().lastIndexOf("/"));
+                    pathName = fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf("/"));
+                } else {
+                    realName = fileEntry.getName();
                 }
-            } catch (java.io.IOException ignored) {}
+                if(realName.startsWith("/")) {
+                    realName = realName.substring(1);
+                }
+                jarFileEntryTempMemStorage.put(fileEntry.getName(),new RunningJarTempFile(pathName, realName, fileEntry));
+            }
         }
         return jarFileEntryTempMemStorage;
     }
@@ -264,12 +262,13 @@ public final class ResourceUtils {
     private static class RunningJarTempFile {
         private final String originalPath;
         private final String originalName;
-        private final File tempFile;
 
-        public RunningJarTempFile(String originalPath, String originalName, File tempFile) {
+        private final ZipEntry fileEntry;
+
+        public RunningJarTempFile(String originalPath, String originalName, ZipEntry fileEntry) {
             this.originalPath = originalPath;
             this.originalName = originalName;
-            this.tempFile = tempFile;
+            this.fileEntry = fileEntry;
         }
 
         public String getOriginalPath() {
@@ -280,8 +279,8 @@ public final class ResourceUtils {
             return originalName;
         }
 
-        public File getTempFile() {
-            return tempFile;
+        public ZipEntry getFileEntry() {
+            return fileEntry;
         }
     }
 }
