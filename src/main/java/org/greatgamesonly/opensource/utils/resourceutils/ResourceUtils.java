@@ -159,7 +159,13 @@ public final class ResourceUtils {
 
         getAllFileEntriesInRunningJar().values().stream()
                 .filter(runningJarTempFile -> (checkSubDirectories) ? runningJarTempFile.getOriginalPath().contains(path) : runningJarTempFile.getOriginalPath().equals(path))
-                .forEach((runningJarTempFile) -> filenames.add(runningJarTempFile.getOriginalName()));
+                .forEach((runningJarTempFile) -> {
+                    if(runningJarTempFile.getOriginalName().startsWith("/")) {
+                        filenames.add(runningJarTempFile.getOriginalName().substring(1));
+                    } else {
+                        filenames.add(runningJarTempFile.getOriginalName());
+                    }
+                });
 
         if(filenames.isEmpty()) {
             try (InputStream in = getContextClassLoader().getResource(path).openStream(); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
