@@ -228,6 +228,8 @@ public final class ResourceUtils {
         for(count = 0L; -1 != (n = inputStream.read(bufferBytes)); count += n) {
             outputStream.write(bufferBytes, 0, n);
         }
+        inputStream.close();
+        outputStream.close();
         return count;
     }
 
