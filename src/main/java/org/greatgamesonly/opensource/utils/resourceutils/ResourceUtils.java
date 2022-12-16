@@ -57,6 +57,11 @@ public final class ResourceUtils {
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
+            try {
+                result.load(getContextClassLoader().getResourceAsStream("pom.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
             throw new RuntimeException("Unable to load any form of properties file from resource directory");
         }
         return result;
