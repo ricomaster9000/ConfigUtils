@@ -35,36 +35,75 @@ public final class ResourceUtils {
         Properties result = new Properties();
         try {
             result.load(getContextClassLoader().getResourceAsStream("config.properties"));
-            result.load(getContextClassLoader().getResourceAsStream("/config.properties"));
         } catch (Exception ignore) {}
         if(result.isEmpty()) {
             try {
+                result.load(getContextClassLoader().getResourceAsStream("/config.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
+                result.load(new FileInputStream(findFileInRunningJar("config.properties")));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("application.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("/application.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
             try {
+                result.load(new FileInputStream(findFileInRunningJar("application.properties")));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("app.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("/app.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
             try {
-                result.load(getContextClassLoader().getResourceAsStream("properties.properties"));
-                result.load(getContextClassLoader().getResourceAsStream("/properties.properties"));
+                result.load(new FileInputStream(findFileInRunningJar("app.properties")));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
             try {
                 result.load(getContextClassLoader().getResourceAsStream("properties.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("/properties.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
+                result.load(new FileInputStream(findFileInRunningJar("properties.properties")));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
             try {
                 result.load(getContextClassLoader().getResourceAsStream("pom.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("/pom.properties"));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
+                result.load(new FileInputStream(findFileInRunningJar("pom.properties")));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
