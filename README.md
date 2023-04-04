@@ -35,3 +35,7 @@ add as dependency by using jitpack.io, go to this link: https://jitpack.io/#rico
 
     public static long copyLarge(InputStream inputStream, OutputStream outputStream, int buffer) throws IOException
 
+    public static String getRunningJarDirectory()
+
+    public static Path getRunningJarPath()
+
