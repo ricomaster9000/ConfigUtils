@@ -19,6 +19,10 @@ public final class ResourceUtils {
     private static Properties properties;
     private static final HashMap<String, RunningJarTempFile> jarFileEntryTempMemStorage = new HashMap<>();
 
+    public static void setProperties(Properties properties) {
+        ResourceUtils.properties = properties;
+    }
+
     public static String getProperty(String keyName) {
         String result = System.getenv(keyName);
         if(result == null || result.isBlank()) {
@@ -53,12 +57,17 @@ public final class ResourceUtils {
         }
         if(result.isEmpty()) {
             try {
+                result.load(new FileInputStream(findFileInRunningJar("application.properties")));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("/application.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
             try {
-                result.load(new FileInputStream(findFileInRunningJar("application.properties")));
+                result.load(new FileInputStream(findFileInRunningJar("/application.properties")));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
