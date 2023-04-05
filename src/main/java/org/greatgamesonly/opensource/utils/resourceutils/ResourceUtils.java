@@ -19,6 +19,10 @@ public final class ResourceUtils {
     private static Properties properties;
     private static final HashMap<String, RunningJarTempFile> jarFileEntryTempMemStorage = new HashMap<>();
 
+    public static void setProperties(Properties properties) {
+        ResourceUtils.properties = properties;
+    }
+
     public static String getProperty(String keyName) {
         String result = System.getenv(keyName);
         if(result == null || result.isBlank()) {
@@ -53,12 +57,17 @@ public final class ResourceUtils {
         }
         if(result.isEmpty()) {
             try {
+                result.load(new FileInputStream(findFileInRunningJar("application.properties")));
+            } catch (Exception ignore) {}
+        }
+        if(result.isEmpty()) {
+            try {
                 result.load(getContextClassLoader().getResourceAsStream("/application.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
             try {
-                result.load(new FileInputStream(findFileInRunningJar("application.properties")));
+                result.load(new FileInputStream(findFileInRunningJar("/application.properties")));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
@@ -126,8 +135,9 @@ public final class ResourceUtils {
 
     public static JarFile getCurrentRunningJarFile() {
         JarFile jarFile = null;
+
         try {
-            jarFile = new JarFile(System.getProperty("java.class.path"));
+            jarFile = new JarFile(getRunningJarPath(getCallerClassName()).toFile());
         } catch(Exception ignored) {}
 
         if(jarFile == null && getContextClassLoader().getClass().getProtectionDomain() != null && getContextClassLoader().getClass().getProtectionDomain().getCodeSource() != null)
@@ -275,11 +285,14 @@ public final class ResourceUtils {
         byte[] bufferBytes = new byte[buffer];
         long count;
         int n;
-        for(count = 0L; -1 != (n = inputStream.read(bufferBytes)); count += n) {
-            outputStream.write(bufferBytes, 0, n);
+        try {
+            for (count = 0L; -1 != (n = inputStream.read(bufferBytes)); count += n) {
+                outputStream.write(bufferBytes, 0, n);
+            }
+        } finally {
+            inputStream.close();
+            outputStream.close();
         }
-        inputStream.close();
-        outputStream.close();
         return count;
     }
 
@@ -334,5 +347,44 @@ public final class ResourceUtils {
         public ZipEntry getFileEntry() {
             return fileEntry;
         }
+    }
+
+    public static String getRunningJarDirectory() {
+        Path runningJarPath = getRunningJarPath(getCallerClassName());
+        return runningJarPath != null ? runningJarPath.toString().substring(0,runningJarPath.toString().lastIndexOf("/")) : null;
+    }
+
+    public static Path getRunningJarPath() {
+        return getRunningJarPath(getCallerClassName());
+    }
+
+    private static Path getRunningJarPath(String callerClassName) {
+        Path result = null;
+        try {
+            result = Path.of(Thread.currentThread()
+                    .getContextClassLoader()
+                    .loadClass(callerClassName)
+                    .getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI());
+        } catch(ClassNotFoundException | URISyntaxException ignored) {}
+        return result;
+    }
+
+    private static String getCallerClassName() {
+        StackTraceElement[] stElements = Thread.currentThread().getStackTrace();
+        String callerClassName = null;
+        for (int i=1; i<stElements.length; i++) {
+            StackTraceElement ste = stElements[i];
+            if (!ste.getClassName().equals(ResourceUtils.class.getName())&& ste.getClassName().indexOf("java.lang.Thread")!=0) {
+                if (callerClassName==null) {
+                    callerClassName = ste.getClassName();
+                } else if (!callerClassName.equals(ste.getClassName())) {
+                    return ste.getClassName();
+                }
+            }
+        }
+        return null;
     }
 }
