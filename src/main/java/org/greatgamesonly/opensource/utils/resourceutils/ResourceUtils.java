@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.JarFile;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
@@ -18,6 +19,7 @@ import static java.nio.file.Files.readString;
 public final class ResourceUtils {
     private static Properties properties;
     private static final HashMap<String, RunningJarTempFile> jarFileEntryTempMemStorage = new HashMap<>();
+    private static final Logger logger = Logger.getLogger("ResourceUtils");
 
     public static void setProperties(Properties properties) {
         ResourceUtils.properties = properties;
@@ -116,7 +118,7 @@ public final class ResourceUtils {
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
-            throw new RuntimeException("Unable to load any form of properties file from resource directory");
+            logger.warning( "Unable to load any form of properties file from resource directory");
         }
         return result;
     }
