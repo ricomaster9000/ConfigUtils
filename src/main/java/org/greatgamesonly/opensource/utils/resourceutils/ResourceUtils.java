@@ -185,7 +185,7 @@ public final class ResourceUtils {
         if(file == null) {
             URL resource = getContextClassLoader().getResource(path);
             if (resource == null) {
-                throw new IllegalArgumentException("file not found! " + path);
+                logger.warning("file not found! " + path);
             } else {
                 return new File(resource.toURI());
             }
@@ -201,15 +201,20 @@ public final class ResourceUtils {
                 .forEach((runningJarTempFile) -> files.add(getResourceFile(runningJarTempFile.getFileEntry())));
 
         if(files.isEmpty()) {
-            try (InputStream in = getContextClassLoader().getResourceAsStream(resourcePath); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
-                String resource;
-                while ((resource = br.readLine()) != null) {
-                    if (resource.endsWith(filterByFileNameExtension)) {
-                        URL resourceFile = getContextClassLoader().getResource(resourcePath.endsWith("/") ? resourcePath + resource : resourcePath + "/" + resource);
-                        if (resourceFile != null) {
-                            files.add(new File(resourceFile.toURI()));
+            InputStream in = getContextClassLoader().getResourceAsStream(resourcePath);
+            if (in != null) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+                    String resource;
+                    while ((resource = br.readLine()) != null) {
+                        if (resource.endsWith(filterByFileNameExtension)) {
+                            URL resourceFile = getContextClassLoader().getResource(resourcePath.endsWith("/") ? resourcePath + resource : resourcePath + "/" + resource);
+                            if (resourceFile != null) {
+                                files.add(new File(resourceFile.toURI()));
+                            }
                         }
                     }
+                } finally {
+                    in.close();
                 }
             }
         }
@@ -326,37 +331,7 @@ public final class ResourceUtils {
         return Thread.currentThread().getContextClassLoader();
     }
 
-    private static class RunningJarTempFile {
-        private final String originalPath;
-        private final String originalName;
-
-        private final ZipEntry fileEntry;
-
-        public RunningJarTempFile(String originalPath, String originalName, ZipEntry fileEntry) {
-            this.originalPath = originalPath;
-            this.originalName = originalName;
-            this.fileEntry = fileEntry;
-        }
-
-        public String getOriginalPath() {
-            return originalPath;
-        }
-
-        public String getOriginalName() {
-            return originalName;
-        }
-
-        public ZipEntry getFileEntry() {
-            return fileEntry;
-        }
-    }
-
-    public static String getRunningJarDirectory() {
-        Path runningJarPath = getRunningJarPath(getCallerClassName());
-        return runningJarPath != null ? runningJarPath.toString().substring(0,runningJarPath.toString().lastIndexOf("/")) : null;
-    }
-
-    public static Path getRunningJarPath() {
+     public static Path getRunningJarPath() {
         return getRunningJarPath(getCallerClassName());
     }
 
@@ -388,5 +363,34 @@ public final class ResourceUtils {
             }
         }
         return null;
+    }
+
+    public static String getRunningJarDirectory() {
+        Path runningJarPath = getRunningJarPath(getCallerClassName());
+        return runningJarPath != null ? runningJarPath.toString().substring(0,runningJarPath.toString().lastIndexOf("/")) : null;
+    }
+
+    private static class RunningJarTempFile {
+        private final String originalPath;
+        private final String originalName;
+        private final ZipEntry fileEntry;
+
+        public RunningJarTempFile(String originalPath, String originalName, ZipEntry fileEntry) {
+            this.originalPath = originalPath;
+            this.originalName = originalName;
+            this.fileEntry = fileEntry;
+        }
+
+        public String getOriginalPath() {
+            return originalPath;
+        }
+
+        public String getOriginalName() {
+            return originalName;
+        }
+
+        public ZipEntry getFileEntry() {
+            return fileEntry;
+        }
     }
 }
