@@ -28,6 +28,9 @@ public final class ResourceUtils {
     public static String getProperty(String keyName) {
         String result = System.getenv(keyName);
         if(result == null || result.isBlank()) {
+            result = System.getProperty(keyName);
+        }
+        if(result == null || result.isBlank()) {
             result = getProperties().getProperty(keyName);
         }
         return result;
@@ -206,7 +209,7 @@ public final class ResourceUtils {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
                     String resource;
                     while ((resource = br.readLine()) != null) {
-                        if (resource.endsWith(filterByFileNameExtension)) {
+                        if ("*".equals(filterByFileNameExtension) || resource.endsWith(filterByFileNameExtension)) {
                             URL resourceFile = getContextClassLoader().getResource(resourcePath.endsWith("/") ? resourcePath + resource : resourcePath + "/" + resource);
                             if (resourceFile != null) {
                                 files.add(new File(resourceFile.toURI()));
