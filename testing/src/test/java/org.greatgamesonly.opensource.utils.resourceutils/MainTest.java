@@ -23,7 +23,7 @@ public class MainTest {
         System.out.println("TESTS - read whole resource files into string");
 
         Assert.assertEquals("readFileToString 1 - file contents must be correct", "Hello Test 1", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile.txt"));
-        Assert.assertEquals("readFileToString 2 - file contents must be correct", "<htmlcvc><body><div>Hello Test 2</div></body></html>", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile2.html"));
+        Assert.assertEquals("readFileToString 2 - file contents must be correct", "<html><body><div>Hello Test 2</div></body></html>", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile2.html"));
         Assert.assertEquals("readFileToString 3 - file contents must be correct", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile3.xml"));
     }
 
