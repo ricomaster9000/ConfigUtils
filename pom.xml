@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.greatgamesonly.opensource.utils</groupId>
 	<artifactId>resourceutils</artifactId>
-	<url>https://github.com/ricomaster9000/Java-Reflection-Utils</url>
-	<version>1.1.0</version>
+	<url>https://github.com/ricomaster9000/ResourceUtils</url>
+	<version>1.1.3</version>
 	<properties>
 		<compiler-plugin.version>3.8.1</compiler-plugin.version>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>8</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
