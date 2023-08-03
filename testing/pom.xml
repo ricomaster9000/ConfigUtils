@@ -4,7 +4,7 @@
 	<packaging>jar</packaging>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.greatgamesonly.opensource.utils</groupId>
-	<artifactId>reflectionutils</artifactId>
+	<artifactId>resourceutils</artifactId>
 	<url>https://github.com/ricomaster9000/ResourceUtils/testing</url>
 	<version>1.0.0</version>
 	<name>${project.groupId}:${project.artifactId}</name>
