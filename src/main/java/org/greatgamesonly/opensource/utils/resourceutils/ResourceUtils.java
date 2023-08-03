@@ -243,15 +243,15 @@ public final class ResourceUtils {
         return tempFile;
     }
 
-    public static List<String> getAllFileNamesInPath(String path) throws IOException {
+    public static List<String> getAllFileNamesInPath(String path) {
         return getAllFileNamesInPath(path, false, "*");
     }
 
-    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException {
+    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) {
         return getAllFileNamesInPath(path, checkSubDirectories, "*");
     }
 
-    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories, String filterByFileNameExtension) throws IOException {
+    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories, String filterByFileNameExtension) {
         List<String> filenames = new ArrayList<>();
 
         getAllFileEntriesInRunningJar().values().stream()
@@ -270,19 +270,19 @@ public final class ResourceUtils {
                         filenames.add(resource);
                     }
                 }
-            } catch (IOException e) {
-                throw e;
-            }
+            } catch (Exception ignore) {}
         }
 
         if(filenames.isEmpty()) {
-            List<Path> filesInPath = Files.list(Paths.get(path)).collect(Collectors.toList());
-            for (Path filePath : filesInPath) {
-                if ("*".equals(filterByFileNameExtension) || (filePath.getFileName() != null && filePath.getFileName().toString().endsWith(filterByFileNameExtension))) {
-                    filenames.add(filePath.getFileName().toString());
+            try (Stream<Path> filesInPath = Files.list(Paths.get(path))) {
+                List<Path> filePaths = filesInPath.collect(Collectors.toList());
+                for (Path filePath : filePaths) {
+                    if ("*".equals(filterByFileNameExtension) || (filePath.getFileName() != null && filePath.getFileName().toString().endsWith(filterByFileNameExtension))) {
+                        filenames.add(filePath.getFileName().toString());
+                    }
                 }
-            }
-            filesInPath.clear();
+                filePaths.clear();
+            } catch (IOException ignored) {}
         }
 
         return filenames;
