@@ -21,11 +21,11 @@ add as dependency by using jitpack.io, go to this link: https://jitpack.io/#rico
 
     public static List<File> getAllFilesInPath(String resourcePath, String filterByFileNameExtension) throws IOException, URISyntaxException
 
-    public static List<String> getAllFileNamesInPath(String path) throws IOException
+    public static List<String> getAllFileNamesInPath(String path)
 
-    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException
+    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories)
 
-    getAllFileNamesInPath(String path, boolean checkSubDirectories, String filterByFileNameExtension) throws IOException
+    getAllFileNamesInPath(String path, boolean checkSubDirectories, String filterByFileNameExtension)
 
     public File findFileInRunningJar(URL fullPath)
 
