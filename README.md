@@ -1,7 +1,7 @@
 # ResourceUtils
 Just a small library that wraps some logic for accessing files and data in the usual resources directory of current jar and from the environment (ENV vars)
 
-add as dependency by using jitpack.io, go to this link: https://jitpack.io/#ricomaster9000/ResourceUtils/1.1.3
+add as dependency by using jitpack.io, go to this link: https://jitpack.io/#ricomaster9000/ResourceUtils/1.1.5
 
 ### methods available:
 
@@ -21,7 +21,11 @@ add as dependency by using jitpack.io, go to this link: https://jitpack.io/#rico
 
     public static List<File> getAllFilesInPath(String resourcePath, String filterByFileNameExtension) throws IOException, URISyntaxException
 
+    public static List<String> getAllFileNamesInPath(String path) throws IOException
+
     public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) throws IOException
+
+    getAllFileNamesInPath(String path, boolean checkSubDirectories, String filterByFileNameExtension) throws IOException
 
     public File findFileInRunningJar(URL fullPath)
 
