@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
-import static java.nio.file.Files.readString;
+// TODO - for java 11+ - import static java.nio.file.Files.readString;
 
 public final class ResourceUtils {
     private static Properties properties;
@@ -27,10 +27,10 @@ public final class ResourceUtils {
 
     public static String getProperty(String keyName) {
         String result = System.getenv(keyName);
-        if(result == null || result.isBlank()) {
+        if(result == null || result.trim().isEmpty()) {
             result = System.getProperty(keyName);
         }
-        if(result == null || result.isBlank()) {
+        if(result == null || result.trim().isEmpty()) {
             result = getProperties().getProperty(keyName);
         }
         return result;
@@ -135,7 +135,8 @@ public final class ResourceUtils {
 
     // handles the part to verify file actually exists
     public static String readFileIntoString(String path) throws IOException, URISyntaxException {
-        return readString(getFileFromPath(path).toPath());
+        return new String(Files.readAllBytes(Paths.get(path)));
+        // TODO - for java 11 - return readString(getFileFromPath(path).toPath());
     }
 
     public static JarFile getCurrentRunningJarFile() {
@@ -341,7 +342,7 @@ public final class ResourceUtils {
     private static Path getRunningJarPath(String callerClassName) {
         Path result = null;
         try {
-            result = Path.of(Thread.currentThread()
+            result = Paths.get(Thread.currentThread()
                     .getContextClassLoader()
                     .loadClass(callerClassName)
                     .getProtectionDomain()
