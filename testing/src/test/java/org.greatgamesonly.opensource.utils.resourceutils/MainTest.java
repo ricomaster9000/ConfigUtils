@@ -27,6 +27,20 @@ public class MainTest {
         Assert.assertEquals("readFileToString 3 - file contents must be correct", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile3.xml"));
     }
 
+    @Test()
+    public void testGetAllFileNamesInPath() throws IOException, URISyntaxException {
+        System.out.println("TESTS - get all full filenames in path");
+
+        Assert.assertTrue("GetAllFileNamesInPath 1 - must return a list of filenames bigger than 2 and which contains correct name", ResourceUtils.getAllFileNamesInPath("resourceTestFiles").size() >= 3 && ResourceUtils.getAllFileNamesInPath("resourceTestFiles").contains("testResourceFile2.html"));
+
+        Assert.assertTrue("GetAllFileNamesInPath 2 - must return a list of filenames filtered correctly",
+                ResourceUtils.getAllFileNamesInPath("resourceTestFiles", false, ".xml")
+                        .stream()
+                        .allMatch(fileName -> fileName.endsWith(".xml")) &&
+                        !ResourceUtils.getAllFileNamesInPath("resourceTestFiles", false, ".xml").isEmpty()
+        );
+    }
+
     @AfterClass
     public static void PostTestClassRun() {
         System.out.println("TESTS - CLEAN UP DATA");

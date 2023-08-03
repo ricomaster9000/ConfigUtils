@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.jar.JarFile;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 // TODO - for java 11+ - import static java.nio.file.Files.readString;
@@ -242,21 +243,48 @@ public final class ResourceUtils {
         return tempFile;
     }
 
+    public static List<String> getAllFileNamesInPath(String path) {
+        return getAllFileNamesInPath(path, false, "*");
+    }
+
     public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories) {
+        return getAllFileNamesInPath(path, checkSubDirectories, "*");
+    }
+
+    public static List<String> getAllFileNamesInPath(String path, boolean checkSubDirectories, String filterByFileNameExtension) {
         List<String> filenames = new ArrayList<>();
 
         getAllFileEntriesInRunningJar().values().stream()
                 .filter(runningJarTempFile -> (checkSubDirectories) ? runningJarTempFile.getOriginalPath().contains(path) : runningJarTempFile.getOriginalPath().equals(path))
-                .forEach((runningJarTempFile) -> filenames.add(runningJarTempFile.getOriginalName()));
+                .forEach((runningJarTempFile) -> {
+                    if ("*".equals(filterByFileNameExtension) || runningJarTempFile.getOriginalName().endsWith(filterByFileNameExtension)) {
+                        filenames.add(runningJarTempFile.getOriginalName());
+                    }
+                });
 
         if(filenames.isEmpty()) {
             try (InputStream in = getContextClassLoader().getResource(path).openStream(); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
                 String resource;
                 while ((resource = br.readLine()) != null) {
-                    filenames.add(resource);
+                    if ("*".equals(filterByFileNameExtension) || resource.endsWith(filterByFileNameExtension)) {
+                        filenames.add(resource);
+                    }
                 }
             } catch (Exception ignored) {}
         }
+
+        if(filenames.isEmpty()) {
+            try {
+                List<Path> filesInPath = Files.list(Paths.get(path)).collect(Collectors.toList());
+                for (Path filePath : filesInPath) {
+                    if ("*".equals(filterByFileNameExtension) || (filePath.getFileName() != null && filePath.getFileName().toString().endsWith(filterByFileNameExtension))) {
+                        filenames.add(filePath.getFileName().toString());
+                    }
+                }
+                filesInPath.clear();
+            } catch (IOException ignored) {}
+        }
+
         return filenames;
     }
 
@@ -309,23 +337,25 @@ public final class ResourceUtils {
 
     private static HashMap<String, RunningJarTempFile> getAllFileEntriesInRunningJar() {
         JarFile jar = getCurrentRunningJarFile();
-        List<ZipEntry> entries = jar.stream()
-                .filter(jarEntry -> !jarEntry.isDirectory())
-                .collect(Collectors.toList());
-        for(ZipEntry fileEntry : entries) {
-            if(!jarFileEntryTempMemStorage.containsKey(fileEntry.getName())) {
-                String realName = null;
-                String pathName = "";
-                if (fileEntry.getName().substring(1).contains("/")) {
-                    realName = fileEntry.getName().substring(fileEntry.getName().lastIndexOf("/"));
-                    pathName = fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf("/"));
-                } else {
-                    realName = fileEntry.getName();
+        if(jar != null) {
+            List<ZipEntry> entries = jar.stream()
+                    .filter(jarEntry -> !jarEntry.isDirectory())
+                    .collect(Collectors.toList());
+            for (ZipEntry fileEntry : entries) {
+                if (!jarFileEntryTempMemStorage.containsKey(fileEntry.getName())) {
+                    String realName = null;
+                    String pathName = "";
+                    if (fileEntry.getName().substring(1).contains("/")) {
+                        realName = fileEntry.getName().substring(fileEntry.getName().lastIndexOf("/"));
+                        pathName = fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf("/"));
+                    } else {
+                        realName = fileEntry.getName();
+                    }
+                    if (realName.startsWith("/")) {
+                        realName = realName.substring(1);
+                    }
+                    jarFileEntryTempMemStorage.put(fileEntry.getName(), new RunningJarTempFile(pathName, realName, fileEntry));
                 }
-                if(realName.startsWith("/")) {
-                    realName = realName.substring(1);
-                }
-                jarFileEntryTempMemStorage.put(fileEntry.getName(),new RunningJarTempFile(pathName, realName, fileEntry));
             }
         }
         return jarFileEntryTempMemStorage;
