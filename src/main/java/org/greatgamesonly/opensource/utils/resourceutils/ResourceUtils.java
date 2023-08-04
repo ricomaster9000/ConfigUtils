@@ -134,9 +134,29 @@ public final class ResourceUtils {
         return properties;
     }
 
-    // handles the part to verify file actually exists
     public static String readFileIntoString(String path) throws IOException, URISyntaxException {
-        return new String(Files.readAllBytes(Paths.get(path)));
+        return readFileIntoString(path, false);
+    }
+
+    private static String readFileIntoString(String path, boolean inRetry) throws IOException, URISyntaxException {
+        String result = null;
+        try {
+            result = new String(Files.readAllBytes(Paths.get(path)));
+        } catch (IOException e) {
+            if(inRetry) {
+                throw e;
+            }
+        }
+        finally {
+            if(!inRetry && result == null) {
+                if (attemptRetryInChildDir(path)) {
+                    result = readFileIntoString(path.replace("../", ""), true);
+                } else {
+                    result = readFileIntoString("../" + path, true);
+                }
+            }
+        }
+        return result;
         // TODO - for java 11 - return readString(getFileFromPath(path).toPath());
     }
 
@@ -186,15 +206,32 @@ public final class ResourceUtils {
     }
 
     public static File getFileFromPath(String path) throws URISyntaxException {
+        return getFileFromPath(path, false);
+    }
+
+    private static File getFileFromPath(String path, boolean inRetry) throws URISyntaxException {
         File file = findFileInRunningJar(path);
         if(file == null) {
             URL resource = getContextClassLoader().getResource(path);
-            if (resource == null) {
-                logger.warning("file not found! " + path);
+            file = resource != null && Files.exists(Paths.get(resource.getPath())) ? new File(resource.toURI()) : null;
+        }
+        if(file == null && Files.exists(Paths.get(path))) {
+            file = new File(path);
+        }
+
+        // try one more time by checking child folder if "../" was used in path or checking parent folder if "../" was not used
+        if(file == null && !inRetry) {
+            if(attemptRetryInChildDir(path)) {
+                return getFileFromPath(path.replace("../", ""), true);
             } else {
-                return new File(resource.toURI());
+                return getFileFromPath("../"+path, true);
             }
         }
+
+        if(inRetry && file == null) {
+            logger.warning("file not found! " + path);
+        }
+
         return file;
     }
 
@@ -402,6 +439,11 @@ public final class ResourceUtils {
     public static String getRunningJarDirectory() {
         Path runningJarPath = getRunningJarPath(getCallerClassName());
         return runningJarPath != null ? runningJarPath.toString().substring(0,runningJarPath.toString().lastIndexOf("/")) : null;
+    }
+
+    private static boolean attemptRetryInChildDir(String path) {
+        // try one more time by checking child folder if "../" was used in path or checking parent folder if "../" was not used
+        return (path.startsWith("..") || path.startsWith("/..") || path.startsWith("./.."));
     }
 
     private static class RunningJarTempFile {

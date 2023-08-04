@@ -25,6 +25,16 @@ public class MainTest {
         Assert.assertEquals("readFileToString 1 - file contents must be correct", "Hello Test 1", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile.txt"));
         Assert.assertEquals("readFileToString 2 - file contents must be correct", "<html><body><div>Hello Test 2</div></body></html>", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile2.html"));
         Assert.assertEquals("readFileToString 3 - file contents must be correct", "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", ResourceUtils.readFileIntoString("resourceTestFiles/testResourceFile3.xml"));
+
+        Assert.assertEquals("readFileToString 4 triggerRetry - file contents must be correct", "Hello Test 1", ResourceUtils.readFileIntoString("../resourceTestFiles/testResourceFile.txt"));
+    }
+
+    @Test()
+    public void testGetFileFromPath() throws IOException, URISyntaxException {
+        System.out.println("TESTS - get file from path");
+
+        Assert.assertTrue("getFileFromPath 1 - file must exist and not be empty", ResourceUtils.getFileFromPath("resourceTestFiles/testResourceFile.txt").exists());
+        Assert.assertTrue("getFileFromPath 2 triggerRetry - file must exist and not be empty", ResourceUtils.getFileFromPath("../resourceTestFiles/testResourceFile.txt").exists());
     }
 
     @Test()
