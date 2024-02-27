@@ -48,7 +48,7 @@ public final class ResourceUtils {
         } catch (Exception ignore) {}
         if(result.isEmpty()) {
             try {
-                result.load(getContextClassLoader().getResourceAsStream("/config.properties"));
+                result.load(getContextClassLoader().getResourceAsStream(File.separator+"config.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
@@ -68,12 +68,12 @@ public final class ResourceUtils {
         }
         if(result.isEmpty()) {
             try {
-                result.load(getContextClassLoader().getResourceAsStream("/application.properties"));
+                result.load(getContextClassLoader().getResourceAsStream(File.separator+"application.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
             try {
-                result.load(new FileInputStream(findFileInRunningJar("/application.properties")));
+                result.load(new FileInputStream(findFileInRunningJar(File.separator+"application.properties")));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
@@ -83,7 +83,7 @@ public final class ResourceUtils {
         }
         if(result.isEmpty()) {
             try {
-                result.load(getContextClassLoader().getResourceAsStream("/app.properties"));
+                result.load(getContextClassLoader().getResourceAsStream(File.separator+"app.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
@@ -98,7 +98,7 @@ public final class ResourceUtils {
         }
         if(result.isEmpty()) {
             try {
-                result.load(getContextClassLoader().getResourceAsStream("/properties.properties"));
+                result.load(getContextClassLoader().getResourceAsStream(File.separator+"properties.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
@@ -113,7 +113,7 @@ public final class ResourceUtils {
         }
         if(result.isEmpty()) {
             try {
-                result.load(getContextClassLoader().getResourceAsStream("/pom.properties"));
+                result.load(getContextClassLoader().getResourceAsStream(File.separator+"pom.properties"));
             } catch (Exception ignore) {}
         }
         if(result.isEmpty()) {
@@ -150,9 +150,9 @@ public final class ResourceUtils {
         finally {
             if(!inRetry && result == null) {
                 if (attemptRetryInChildDir(path)) {
-                    result = readFileIntoString(path.replace("../", ""), true);
+                    result = readFileIntoString(path.replace(".."+File.separator+, ""), true);
                 } else {
-                    result = readFileIntoString("../" + path, true);
+                    result = readFileIntoString(".." + File.separator + path, true);
                 }
             }
         }
@@ -222,9 +222,9 @@ public final class ResourceUtils {
         // try one more time by checking child folder if "../" was used in path or checking parent folder if "../" was not used
         if(file == null && !inRetry) {
             if(attemptRetryInChildDir(path)) {
-                return getFileFromPath(path.replace("../", ""), true);
+                return getFileFromPath(path.replace(".."+File.separator+, ""), true);
             } else {
-                return getFileFromPath("../"+path, true);
+                return getFileFromPath(".."+File.separator+path, true);
             }
         }
 
@@ -249,7 +249,7 @@ public final class ResourceUtils {
                     String resource;
                     while ((resource = br.readLine()) != null) {
                         if ("*".equals(filterByFileNameExtension) || resource.endsWith(filterByFileNameExtension)) {
-                            URL resourceFile = getContextClassLoader().getResource(resourcePath.endsWith("/") ? resourcePath + resource : resourcePath + "/" + resource);
+                            URL resourceFile = getContextClassLoader().getResource(resourcePath.endsWith(File.separator) ? resourcePath + resource : resourcePath + File.separator + resource);
                             if (resourceFile != null) {
                                 files.add(new File(resourceFile.toURI()));
                             }
@@ -382,13 +382,13 @@ public final class ResourceUtils {
                 if (!jarFileEntryTempMemStorage.containsKey(fileEntry.getName())) {
                     String realName = null;
                     String pathName = "";
-                    if (fileEntry.getName().substring(1).contains("/")) {
-                        realName = fileEntry.getName().substring(fileEntry.getName().lastIndexOf("/"));
-                        pathName = fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf("/"));
+                    if (fileEntry.getName().substring(1).contains(File.separator)) {
+                        realName = fileEntry.getName().substring(fileEntry.getName().lastIndexOf(File.separator));
+                        pathName = fileEntry.getName().substring(0, fileEntry.getName().lastIndexOf(File.separator));
                     } else {
                         realName = fileEntry.getName();
                     }
-                    if (realName.startsWith("/")) {
+                    if (realName.startsWith(File.separator)) {
                         realName = realName.substring(1);
                     }
                     jarFileEntryTempMemStorage.put(fileEntry.getName(), new RunningJarTempFile(pathName, realName, fileEntry));
@@ -438,12 +438,12 @@ public final class ResourceUtils {
 
     public static String getRunningJarDirectory() {
         Path runningJarPath = getRunningJarPath(getCallerClassName());
-        return runningJarPath != null ? runningJarPath.toString().substring(0,runningJarPath.toString().lastIndexOf("/")) : null;
+        return runningJarPath != null ? runningJarPath.toString().substring(0,runningJarPath.toString().lastIndexOf(File.separator)) : null;
     }
 
     private static boolean attemptRetryInChildDir(String path) {
         // try one more time by checking child folder if "../" was used in path or checking parent folder if "../" was not used
-        return (path.startsWith("..") || path.startsWith("/..") || path.startsWith("./.."));
+        return (path.startsWith("..") || path.startsWith(File.separator+"..") || path.startsWith("."+File.separator+".."));
     }
 
     private static class RunningJarTempFile {
