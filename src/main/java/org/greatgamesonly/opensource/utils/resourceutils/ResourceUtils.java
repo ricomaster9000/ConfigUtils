@@ -150,7 +150,7 @@ public final class ResourceUtils {
         finally {
             if(!inRetry && result == null) {
                 if (attemptRetryInChildDir(path)) {
-                    result = readFileIntoString(path.replace(".."+File.separator+, ""), true);
+                    result = readFileIntoString(path.replace(".."+File.separator, ""), true);
                 } else {
                     result = readFileIntoString(".." + File.separator + path, true);
                 }
@@ -222,7 +222,7 @@ public final class ResourceUtils {
         // try one more time by checking child folder if "../" was used in path or checking parent folder if "../" was not used
         if(file == null && !inRetry) {
             if(attemptRetryInChildDir(path)) {
-                return getFileFromPath(path.replace(".."+File.separator+, ""), true);
+                return getFileFromPath(path.replace(".."+File.separator, ""), true);
             } else {
                 return getFileFromPath(".."+File.separator+path, true);
             }
