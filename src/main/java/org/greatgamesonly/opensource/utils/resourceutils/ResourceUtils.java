@@ -230,6 +230,10 @@ public final class ResourceUtils {
             file = new File(path);
         }
 
+        if (file == null) {
+            try { file = new File(path);} catch (Exception ignored) {}
+        }
+
         // try one more time by checking child folder if "../" was used in path or checking parent folder if "../" was not used
         if(file == null && !inRetry) {
             if(attemptRetryInChildDir(path)) {
