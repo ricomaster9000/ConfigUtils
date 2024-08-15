@@ -160,6 +160,7 @@ public final class ResourceUtils {
         // TODO - for java 11 - return readString(getFileFromPath(path).toPath());
     }
 
+
     public static JarFile getCurrentRunningJarFile() {
         JarFile jarFile = null;
 
