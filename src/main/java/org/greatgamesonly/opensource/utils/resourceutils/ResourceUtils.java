@@ -170,7 +170,12 @@ public final class ResourceUtils {
         if(jarFile == null && getContextClassLoader().getClass().getProtectionDomain() != null && getContextClassLoader().getClass().getProtectionDomain().getCodeSource() != null)
         {
             try {
-                jarFile = new JarFile(new File(getContextClassLoader().getClass().getProtectionDomain().getCodeSource().getLocation().toURI()));
+                URL jarUrl = getContextClassLoader().getClass().getProtectionDomain().getCodeSource().getLocation();
+                if(jarUrl.getProtocol().equals("jar")) {
+                    jarFile = new JarFile(new File(jarUrl.getPath()));
+                } else {
+                    jarFile = new JarFile(new File(jarUrl.toURI()));
+                }
             } catch (Exception ignored) {}
         }
         if(jarFile == null) {
@@ -213,7 +218,13 @@ public final class ResourceUtils {
         File file = findFileInRunningJar(path);
         if(file == null) {
             URL resource = getContextClassLoader().getResource(path);
-            file = resource != null && Files.exists(Paths.get(resource.toURI())) ? new File(resource.toURI()) : null;
+            if(resource != null) {
+                if ("jar".equals(resource.getProtocol())) {
+                    file = Files.exists(Paths.get(resource.getPath())) ? new File(resource.getPath()) : null;
+                } else {
+                    file = Files.exists(Paths.get(resource.toURI())) ? new File(resource.toURI()) : null;
+                }
+            }
         }
         if(file == null && Files.exists(Paths.get(path))) {
             file = new File(path);

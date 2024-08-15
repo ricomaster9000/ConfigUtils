@@ -23,18 +23,6 @@ jobs:
         java-version: '17'
         distribution: 'corretto'
         cache: maven
-    - name: Maven Cache - Restore
-      # You may pin to the exact commit or the version.
-      # uses: skjolber/maven-cache-github-action@b1d76adcd43ba2e253cb04c5dbe67d0ea599f65b
-      uses: skjolber/maven-cache-github-action@v2.0
-      with:
-          step: restore
     - name: Test Java app
       run: mvn clean install && mvn -f testing clean install test
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    - name: Maven Cache - Save
-      # You may pin to the exact commit or the version.
-      # uses: skjolber/maven-cache-github-action@b1d76adcd43ba2e253cb04c5dbe67d0ea599f65b
-      uses: skjolber/maven-cache-github-action@v2.0
-      with:
-          step: save
