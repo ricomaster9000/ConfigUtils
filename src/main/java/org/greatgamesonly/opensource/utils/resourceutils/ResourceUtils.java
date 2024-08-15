@@ -357,7 +357,10 @@ public final class ResourceUtils {
         RunningJarTempFile file = getAllFileEntriesInRunningJar().containsKey(fullPath) ?
                 getAllFileEntriesInRunningJar().get(fullPath) :
                 getAllFileEntriesInRunningJar().values().stream()
-                        .filter(runningJarTempFile -> runningJarTempFile.getOriginalPath().contains(fullPath))
+                        .filter(runningJarTempFile ->
+                                runningJarTempFile.getOriginalPath().contains(fullPath) ||
+                                runningJarTempFile.getFileEntry().getName().endsWith(fullPath)
+                        )
                         .findFirst().orElse(null);
         return file != null ? getResourceFile(file.getFileEntry()) : null;
     }
