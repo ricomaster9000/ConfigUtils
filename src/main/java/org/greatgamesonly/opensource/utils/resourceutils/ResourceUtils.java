@@ -231,7 +231,10 @@ public final class ResourceUtils {
         }
 
         if (file == null) {
-            try { file = new File(path);} catch (Exception ignored) {}
+            try {
+                file = new File(path);
+                file = file.exists() ? file : null;
+            } catch (Exception ignored) {}
         }
 
         // try one more time by checking child folder if "../" was used in path or checking parent folder if "../" was not used
